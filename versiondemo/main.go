@@ -41,7 +41,6 @@ const (
 	serviceName  = "cadence-frontend"
 	domain       = "version-demo"
 	taskList     = "version-demo"
-	workflowID   = "version-demo"
 	workflowName = "VersionDemoWorkflow"
 	signalName   = "continue"
 	changeID     = "demo-change"
@@ -53,6 +52,14 @@ var hostPort = func() string {
 		return addr
 	}
 	return "127.0.0.1:7933"
+}()
+
+// workflowID is the demo workflow's ID. Set WORKFLOW_ID to use a fresh one for each run.
+var workflowID = func() string {
+	if id := os.Getenv("WORKFLOW_ID"); id != "" {
+		return id
+	}
+	return "version-demo"
 }()
 
 // maxVersion is the highest version this worker's code supports. It stands in for "old code"

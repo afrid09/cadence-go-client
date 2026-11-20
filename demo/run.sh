@@ -16,6 +16,7 @@ build() { # build <git ref> <output binary>
 scenario() { # scenario <binary> <label>
   local bin=$1 label=$2 out="logs/$2"
   mkdir -p "$out"
+  export WORKFLOW_ID="version-demo-$label"
   "$bin" register
 
   echo "=== [$label] new worker (supports version 2) starts the workflow"
