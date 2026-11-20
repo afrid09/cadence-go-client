@@ -16,6 +16,18 @@ jobs:
       - name: Fetch master for the "before" run
         run: git fetch https://github.com/cadence-workflow/cadence-go-client.git master:refs/remotes/origin/master
 
+      # Cadence crashes if it starts before Cassandra accepts connections, so start Cassandra first.
+      - name: Start Cassandra and wait until it is ready
+        timeout-minutes: 8
+        run: |
+          docker compose -f docker/github_actions/docker-compose.yml up -d cassandra statsd
+          until docker compose -f docker/github_actions/docker-compose.yml exec -T cassandra cqlsh -e "describe keyspaces" >/dev/null 2>&1; do
+            echo "waiting for Cassandra"; sleep 10
+          done
+
+      - name: Start Cadence
+        run: docker compose -f docker/github_actions/docker-compose.yml up -d cadence
+
       # Runs inside the same Docker network as the Cadence server, the way the integration tests do.
       # The script is copied to an untracked file because it checks out other commits while it runs.
       - name: Run the scenario before and after the fix
