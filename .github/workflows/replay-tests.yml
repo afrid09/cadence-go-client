@@ -1,0 +1,21 @@
+name: Replay tests
+on:
+  push:
+    branches: [chore/run-replay-tests]
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.10'
+      - name: Run replay tests
+        run: go test -race -count=1 -v ./test/replaytests/... 2>&1 | tee replay.log
+      - name: Summary
+        if: always()
+        run: grep -E "^(=== RUN|--- (PASS|FAIL)|PASS|FAIL|ok)" replay.log
