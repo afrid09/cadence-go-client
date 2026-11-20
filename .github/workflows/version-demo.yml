@@ -6,24 +6,29 @@ on:
 jobs:
   demo:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
+          submodules: true
           fetch-depth: 0
 
       - name: Fetch master for the "before" run
         run: git fetch https://github.com/cadence-workflow/cadence-go-client.git master:refs/remotes/origin/master
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.26.10'
-
-      - name: Start Cadence server
-        run: docker compose -f docker/github_actions/docker-compose.yml up -d cassandra statsd cadence
-
+      # Runs inside the same Docker network as the Cadence server, the way the integration tests do.
+      # The script is copied to an untracked file because it checks out other commits while it runs.
       - name: Run the scenario before and after the fix
-        # Copied out first, because the script checks out other commits while it runs.
-        run: cp demo/run.sh /tmp/run.sh && bash /tmp/run.sh
+        timeout-minutes: 25
+        run: |
+          cp demo/run.sh .demo-run.sh
+          docker compose -f docker/github_actions/docker-compose.yml run --rm \
+            -e SERVICE_ADDR=cadence:7933 -e GITHUB_SHA \
+            integ-test bash .demo-run.sh
+
+      - name: Cadence server logs
+        if: always()
+        run: docker compose -f docker/github_actions/docker-compose.yml logs cadence --tail 60
 
       - name: Upload full logs
         if: always()

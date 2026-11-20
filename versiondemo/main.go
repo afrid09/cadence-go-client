@@ -38,7 +38,6 @@ import (
 )
 
 const (
-	hostPort     = "127.0.0.1:7933"
 	serviceName  = "cadence-frontend"
 	domain       = "version-demo"
 	taskList     = "version-demo"
@@ -47,6 +46,14 @@ const (
 	signalName   = "continue"
 	changeID     = "demo-change"
 )
+
+// hostPort is the Cadence frontend address. Set SERVICE_ADDR to override it.
+var hostPort = func() string {
+	if addr := os.Getenv("SERVICE_ADDR"); addr != "" {
+		return addr
+	}
+	return "127.0.0.1:7933"
+}()
 
 // maxVersion is the highest version this worker's code supports. It stands in for "old code"
 // (1) and "new code" (2).
